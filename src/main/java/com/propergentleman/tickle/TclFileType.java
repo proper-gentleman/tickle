@@ -8,6 +8,7 @@ import javax.swing.*;
 public class TclFileType extends LanguageFileType {
     public static final TclFileType INSTANCE = new TclFileType();
 
+
     private TclFileType() {
         super(TclLanguage.INSTANCE);
     }
@@ -29,6 +30,6 @@ public class TclFileType extends LanguageFileType {
 
     @Override
     public Icon getIcon() {
-        return null; // You can add an icon here
+        return TclIcons.FILE;
     }
 }

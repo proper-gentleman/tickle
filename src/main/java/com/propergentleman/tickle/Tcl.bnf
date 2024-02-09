@@ -1,0 +1,20 @@
+{
+  parserClass="com.propergentleman.tickle.parser.TclParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Tcl"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.propergentleman.tickle.psi"
+  psiImplPackage="com.propergentleman.tickle.psi.impl"
+
+  elementTypeHolderClass="com.propergentleman.tickle.psi.TclTypes"
+  elementTypeClass="com.propergentleman.tickle.psi.TclElementType"
+  tokenTypeClass="com.propergentleman.tickle.psi.TclTokenType"
+}
+
+simpleFile ::= item_*
+
+private item_ ::= (property|COMMENT|CRLF)
+
+property ::= (KEY? SEPARATOR VALUE?) | KEY

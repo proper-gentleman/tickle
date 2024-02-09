@@ -1,35 +1,44 @@
 package com.propergentleman.tickle;
-import com.intellij.psi.TokenType;
-import com.intellij.psi.tree.IElementType;
+
 import com.intellij.lexer.FlexLexer;
+import com.intellij.psi.tree.IElementType;
+import com.propergentleman.tickle.psi.TclTypes;
+import com.intellij.psi.TokenType;
 
 %%
+
 %class TclLexer
-%unicode
-%public
-%type IElementType
 %implements FlexLexer
+%unicode
+%function advance
+%type IElementType
+%eof{  return;
+%eof}
 
-LineTerminator = \r|\n|\r\n
-Whitespace = [ \t\f]+
-Identifier = [a-zA-Z_][a-zA-Z0-9_]*
-Keyword = "if" | "then" | "else" | "elseif" | "while" | "for" | "proc"
-Comment = \#.*{LineTerminator}
-Variable = \$[a-zA-Z_][a-zA-Z0-9_]* | \$\{[^}]+\}
-CommandSubstitution = \[[^\]]+\]
-Braces = \{[^\}]*\}
-String = \"[^\"]*\"
+CRLF=\R
+WHITE_SPACE=[\ \n\t\f]
+FIRST_VALUE_CHARACTER=[^ \n\f\\] | "\\"{CRLF} | "\\".
+VALUE_CHARACTER=[^\n\f\\] | "\\"{CRLF} | "\\".
+END_OF_LINE_COMMENT=("#"|"!")[^\r\n]*
+SEPARATOR=[:=]
+KEY_CHARACTER=[^:=\ \n\t\f\\] | "\\ "
 
+%state WAITING_VALUE
 
 %%
 
-{Whitespace}               { return TclTokenTypes.WHITE_SPACE; }
-{Keyword}                  { return TclTokenTypes.KEYWORD; }
-{Identifier}               { return TclTokenTypes.IDENTIFIER; }
-{Comment}                  { return TclTokenTypes.COMMENT; }
-{Variable}                 { return TclTokenTypes.VARIABLE; }
-{CommandSubstitution}      { return TclTokenTypes.COMMAND_SUBSTITUTION; }
-{Braces}                   { return TclTokenTypes.BRACES; }
-{String}                   { return TclTokenTypes.STRING; }
+<YYINITIAL> {END_OF_LINE_COMMENT}                           { yybegin(YYINITIAL); return TclTypes.COMMENT; }
 
-.                          { return TokenType.BAD_CHARACTER; }
+<YYINITIAL> {KEY_CHARACTER}+                                { yybegin(YYINITIAL); return TclTypes.KEY; }
+
+<YYINITIAL> {SEPARATOR}                                     { yybegin(WAITING_VALUE); return TclTypes.SEPARATOR; }
+
+<WAITING_VALUE> {CRLF}({CRLF}|{WHITE_SPACE})+               { yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
+
+<WAITING_VALUE> {WHITE_SPACE}+                              { yybegin(WAITING_VALUE); return TokenType.WHITE_SPACE; }
+
+<WAITING_VALUE> {FIRST_VALUE_CHARACTER}{VALUE_CHARACTER}*   { yybegin(YYINITIAL); return TclTypes.VALUE; }
+
+({CRLF}|{WHITE_SPACE})+                                     { yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
+
+[^]                                                         { return TokenType.BAD_CHARACTER; }
