@@ -12,33 +12,48 @@ import com.intellij.psi.TokenType;
 %unicode
 %function advance
 %type IElementType
-%eof{  return;
+%eof{  return TokenType.WHITE_SPACE;
 %eof}
 
-CRLF=\R
-WHITE_SPACE=[\ \n\t\f]
-FIRST_VALUE_CHARACTER=[^ \n\f\\] | "\\"{CRLF} | "\\".
-VALUE_CHARACTER=[^\n\f\\] | "\\"{CRLF} | "\\".
-END_OF_LINE_COMMENT=("#"|"!")[^\r\n]*
-SEPARATOR=[:=]
-KEY_CHARACTER=[^:=\ \n\t\f\\] | "\\ "
+// Regular expressions for basic Tcl elements
+WhiteSpace = [ \t\f]+
+NewLine = \r|\n|\r\n
+Comment = \#.*{NewLine}
+Command = [a-zA-Z_][a-zA-Z0-9_]*
 
-%state WAITING_VALUE
+// Tcl specific tokens
+Variable = \$[a-zA-Z_][a-zA-Z0-9_]*
+VariableBrace = \$\{[^}]*\}
+StringDouble = \"(\\["\\]|[^\n"\\])*\"
+StringBrace = \{[^\}]*\}
+Bracket = \[[^\]]*\]
+Paren = \([^\)]*\)
+Operator = [\+\-\*/%=&\|<>\^~!]
+Namespace        = [a-zA-Z_][a-zA-Z0-9_]*(::[a-zA-Z_][a-zA-Z0-9_]*)+
+Block            = \{([^}]*\{[^}]*\}[^}]*)*\}
+LineContinuation = \\{NewLine}
+
+// Add a pattern for Tcl keywords
+Keyword = "if"|"then"|"else"|"elseif"|"while"|"for"|"foreach"|"break"|"continue"|"proc"|"return"|"eval"|"set"|"expr"|"switch"|"default"|"case"|"catch"|"throw"|"package"|"require"|"set"
 
 %%
 
-<YYINITIAL> {END_OF_LINE_COMMENT}                           { yybegin(YYINITIAL); return TclTypes.COMMENT; }
-
-<YYINITIAL> {KEY_CHARACTER}+                                { yybegin(YYINITIAL); return TclTypes.KEY; }
-
-<YYINITIAL> {SEPARATOR}                                     { yybegin(WAITING_VALUE); return TclTypes.SEPARATOR; }
-
-<WAITING_VALUE> {CRLF}({CRLF}|{WHITE_SPACE})+               { yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
-
-<WAITING_VALUE> {WHITE_SPACE}+                              { yybegin(WAITING_VALUE); return TokenType.WHITE_SPACE; }
-
-<WAITING_VALUE> {FIRST_VALUE_CHARACTER}{VALUE_CHARACTER}*   { yybegin(YYINITIAL); return TclTypes.VALUE; }
-
-({CRLF}|{WHITE_SPACE})+                                     { yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
-
-[^]                                                         { return TokenType.BAD_CHARACTER; }
+// Rules for matching tokens
+<YYINITIAL> {
+  {Comment}                      { return TclTypes.COMMENT; }
+  {Keyword}                      { return TclTypes.KEYWORD; }
+  {StringDouble}                 { return TclTypes.STRING; }
+  {StringBrace}                  { return TclTypes.STRING; }
+  {Variable}                     { return TclTypes.VARIABLE; }
+  {VariableBrace}                { return TclTypes.VARIABLE; }
+  {Bracket}                      { return TclTypes.BRACKET; }
+  {Paren}                        { return TclTypes.PAREN; }
+  {Operator}                     { return TclTypes.OPERATOR; }
+  {Namespace}                    { return TclTypes.NAMESPACE; }
+  {Block}                        { return TclTypes.BLOCK; }
+  {LineContinuation}             { return TokenType.WHITE_SPACE; }
+  {Command}                      { return TclTypes.COMMAND; }
+  {WhiteSpace}                   { return TokenType.WHITE_SPACE; }
+  {NewLine}                      { return TokenType.WHITE_SPACE; }
+  .                              { return TokenType.BAD_CHARACTER; }
+}

@@ -13,7 +13,7 @@
   tokenTypeClass="com.propergentleman.tickle.psi.TclTokenType"
 }
 
-simpleFile ::= item_*
+tclFile ::= item_*
 
 private item_ ::= (property|COMMENT|CRLF)
 

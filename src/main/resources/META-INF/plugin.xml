@@ -1,18 +1,28 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.propergentleman.tickle</id>
-    <name>tickle Template</name>
+    <name>Tickle</name>
     <vendor>proper-gentleman</vendor>
+    <description>Basic TCL support created with the help of AI</description>
 
     <depends>com.intellij.modules.platform</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.propergentleman.tickle.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
+        <fileType
+                id="tclFileType"
+                name="TCL File"
+                language="TCL"
+                fieldName="INSTANCE"
+                implementationClass="com.propergentleman.tickle.TclFileType"
+                extensions="tcl"/>
+        <lang.parserDefinition
+                language="TCL"
+                implementationClass="com.propergentleman.tickle.TclParserDefinition"/>
+        <lang.syntaxHighlighterFactory
+                language="TCL"
+                implementationClass="com.propergentleman.tickle.TclSyntaxHighlighterFactory"/>
     </extensions>
 
-    <applicationListeners>
-        <listener class="com.github.propergentleman.tickle.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
-    </applicationListeners>
 </idea-plugin>
